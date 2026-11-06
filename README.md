@@ -1,12 +1,9 @@
-<div align="center">
-<h1>Yadehami</h1>
+<p align="center"><img src="yadehami.png" width="339"></p>
 
-<img src="https://github.com/Konqi0139/yadehami/blob/main/yadehami.png" width="393px">
+<p align="center">live wallpaper manager for compositor based in X11 </p>  
 
-live wallpaper manager for compositor based in X11
+# Yadehami
 
-</div>
 
 ## Preview
-
-![Preview](https://github.com/Konqi0139/yadehami/blob/main/preview.png)
+![Preview](preview.png)
