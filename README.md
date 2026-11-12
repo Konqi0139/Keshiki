@@ -1,6 +1,6 @@
 <p align="center"><img src="keshiki.png" width="339"></p>
 
-<p align="center">live wallpaper manager for compositor based in X11 </p>
+<p align="center">**un gestor de fondos de pantalla animados liviano para Linux escrito en Bash.** </p>
 
 # Keshiki ー景色ー
 
@@ -10,7 +10,7 @@ Si te gusta mi proyecto, ¡por favor no olvides hacer clic en el botón de estre
 [![GitHub licencia](https://img.shields.io/github/license/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki)
 [![GitHub último commit](https://img.shields.io/github/last-commit/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki/commits)
 
-**Keshiki (景色) es un gestor de fondos de pantalla animados liviano y nativo para Linux escrito en Bash.**
+
 
 ---
 
