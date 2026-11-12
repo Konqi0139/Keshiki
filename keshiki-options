@@ -1,0 +1,80 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+BCyan="\e[1;36m" CReset="\e[m"
+[ -f "${CONFIG}" ] && source "${CONFIG}"
+
+options(){ 
+    if [[ $LANG = es* ]]; then 
+        Lan=("Aplicar" "Acerca de" "Cancelar"
+        "Activar audio" "Volumen" "Opciones"
+        "Mostrar Nombres de los wallpapers"
+        "Mostrar keshiki en bandeja del sistema"
+        "Iniciar wallpaper debajo del escritorio")
+    else 
+        Lan=("Apply" "About" "Cancel"
+        "Enable audio" "Volume" "Options"
+        "Show wallpaper names"
+        "Show keshiki in system tray"
+        "Start wallpaper below of desktop")
+    fi
+
+     grep -qF FALSE <<<"${audio[0]}" || volume="--field=${Lan[4]}:NUM ${audio[2]}!39..130!1"
+
+    res=$(keshiki --center --title="${Lan[5]}" --borders=8 --width=239 --height=231 --form --window-icon="$ICON" \
+    --field="${Lan[6]}":CHK "${view[0]}" \
+    --field="${Lan[3]}":CHK "${audio[0]}" \
+    $volume \
+    --field="${Lan[7]}":CHK "${systemtray}" \
+    --field="${Lan[8]}":CHK "${below_desk}" \
+    --button="${Lan[1]}!gtk-info:${HERE}/keshiki-about" \
+    --button="${Lan[2]}!gtk-cancel":1 --button="${Lan[0]}!gtk-ok":0)
+
+    [ -z "$res" ] && exit 0
+    IFS="|" read -r -a result <<< "$res"
+    
+    [ "${result[0]}" = "TRUE" ] && vie='' || vie='--generic'
+    [ "${result[1]}" = "TRUE" ] && aud='--audio=1' || aud='--no-audio'
+    [[ "${result[2]}" =~ (TRUE|FALSE) ]] && vol="${audio[2]}" || vol="${result[2]}"
+    [ -z "$volume" ] && sys="${result[2]}" bel="${result[3]}" || sys="${result[3]}" bel="${result[4]}"
+    
+
+    echo -e "# configuration of keshiki\n\nview=(${result[0]} $vie)\naudio=(${result[1]} $aud $vol)\nsystemtray=$sys\nbelow_desk=$bel\nopacity=$opacity" > "${CONFIG}"
+
+    [ "${result[0]}" != "${view[0]}" ] && restart
+}
+
+opacity(){ 
+    if [[ $LANG = es* ]]; then 
+        Lan=("Seleccione un Nivel de Opacidad" "Nivel de Opacidad" "Aceptar")
+    else 
+        Lan=("Select an Opacity Level" "Opacity Level" "Accept")
+    fi
+    
+    local opacity_options=()
+    for v in 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1; do
+        if [ "$v" = "$opacity" ]; then
+            opacity_options+=("TRUE" "$v")
+        else
+            opacity_options+=("FALSE" "$v")
+        fi
+    done
+
+    number=$(keshiki --window-icon="$ICON" --center --list --radiolist --width=293 --height=339 \
+    --text-align=center --text="${Lan[0]}" --title="${Lan[1]}" \
+    --button="${Lan[2]}!gtk-ok":0 --column="	" --column="${Lan[1]}" "${opacity_options[@]}")
+
+    [ -z "$number" ] && exit 0
+    
+    number=$(cut -d'|' -f2 <<<"$number")
+
+    local tmp_cfg
+    tmp_cfg=$(head -6 "${CONFIG}")
+    echo -e "${tmp_cfg}\nopacity=${number}" > "${CONFIG}"
+}
+
+[ "$1" = "-o" ] && opacity || options
+exit 0

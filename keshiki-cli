@@ -1,0 +1,148 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+export HERE="$(dirname "$(readlink -f "${0}")")" list_wall="/tmp/keshiki_list_wall.txt" 
+export DIRCONFIG="$HOME/.config/keshiki/" socketfile="/tmp/mpv_socket_${USER}" 
+export CONFIG="${DIRCONFIG}keshiki.cfg" script=${0##*/}
+
+
+[ -f "${CONFIG}" ] && source "${CONFIG}"
+
+BBlack='\e[1;30m' BRed='\e[1;31m' BGreen='\e[1;32m' BYellow='\e[1;33m' 
+BBlue='\e[1;34m' BPurple='\e[1;35m' BCyan='\e[1;36m' BWhite='\e[1;37m' CReset="\e[m"
+
+if [[ $LANG = es* ]]; then 
+    Lan=(
+        "Uso: $script [OPCIONES]" \
+        "muestra este texto de ayuda y sale" \
+        "muestra la versión y sale" \
+        "inicia el último wallpaper seleccionado." \
+        "finaliza la reproducción del wallpaper" \
+        "lista los wallpapers disponibles" \
+        "<número>  Seleccione un wallpaper que quiera iniciar" \
+        "nota: solo funciona si antes ejecutó el script con la opción '-l'" \
+        "<archivo> añade videos (.mp4|.gif|.mkv|.webm|.mov|.avi), imágenes (.gif), o carpetas (folder/)" \
+        "$script: no se especificó ninguna opción." \
+        "Pruebe '$script -h' para más información."
+    )
+else 
+    Lan=(
+        "Use: $script [OPTIONS]" \
+        "display this help text and exit" \
+        "show the version and exit" \
+        "Start the last selected wallpaper." \
+        "finish wallpaper playback" \
+        "List the available wallpapers." \
+        "<number>  Select a wallpaper you want to start." \
+        "Note: This only works if I run the script with the '-l' option beforehand." \
+        "<file>    Add videos (.mp4|.gif|.mkv|.webm|.mov|.avi), images (.gif), or folders (folder/)" \
+        "$script: no option was specified" \
+        "Try '$script -h' for more information."
+    )
+fi
+
+print_help(){ 
+    echo -e "\t${Lan[0]}\n
+Opciones:
+\t-h\t     ${Lan[1]}
+\t-v\t     ${Lan[2]}
+\t-r\t     ${Lan[3]}
+\t-f\t     ${Lan[4]}
+\t-l\t     ${Lan[5]}
+\t-s ${Lan[6]}
+\t\t     ${Lan[7]}
+\t-a ${Lan[8]}\n"
+}
+
+restore(){ 
+    [ "$systemtray" = "TRUE" ] && "${HERE}/keshiki-systray" &
+    "${HERE}/keshiki-start"
+}
+
+list_wallpaper(){ 
+    if [[ $LANG = es* ]]; then 
+        Lang=("listando wallpapers..." "Disponible" "No disponible")
+    else 
+        Lang=("listing wallpapers..." "Available" "Not available")
+    fi
+    
+    echo -e "${Lang[0]}\n"
+    local list="/tmp/keshiki_tmp_list"
+    local x=1
+    
+    rm -f "$list" "$list_wall"
+    cd "${DIRCONFIG}" 2>/dev/null || exit
+
+    for desk in desktops/*.desktop; do
+        [ -e "$desk" ] || continue
+        local name="" exec_path=""
+        while IFS='=' read -r key value; do
+            if [[ "$key" == "Name" ]]; then
+                name="$value"
+            elif [[ "$key" == "Exec" ]]; then
+                exec_path=$(sed "s|${HERE}/keshiki-start '||;s|'||" <<<"$value")
+            fi
+        done < "$desk"
+        echo "${name}|${exec_path}" >> "$list"
+    done
+
+    [ ! -f "$list" ] && echo -e "${BRed}No hay wallpapers añadidos aún.${CReset}\n" && return
+
+    while IFS='|' read -r d1 d2; do 
+        echo -e "   ${x}\t${d1}|${d2}" >> "$list_wall"
+        if [ -f "$d2" ]; then 
+            echo -e "$BPurple   ${x}\t${BCyan}$(cut -c 1-100 <<<"${d1}") ${BGreen}${Lang[1]}$CReset"
+        else
+            echo -e "$BPurple   ${x}\t${BCyan}$(cut -c 1-100 <<<"${d1}") ${BRed}${Lang[2]}$CReset"
+        fi
+        ((x++))
+    done < "$list"
+    
+    rm -f "$list"
+}
+
+finish(){
+    echo '{ "command": ["quit"] }' | socat - "$socketfile" 2>/dev/null
+    pkill mpv.bash
+}
+
+start(){
+    if [ ! -f "$list_wall" ]; then
+        echo -e "\n${BYellow}Primero ejecuta la opción '-l'$CReset\n"
+        exit 1
+    fi
+    echo -e "Iniciando...\n"
+    local target_cmd
+    target_cmd=$(grep "   ${1}	" "$list_wall" | cut -f2 -d"|")
+    if [ -n "$target_cmd" ]; then
+        "${HERE}/keshiki-start" "$target_cmd"
+    else
+        echo -e "${BRed}Número de wallpaper no válido.${CReset}\n"
+    fi
+}
+
+add(){ 
+    echo -e "${BPurple}Añadiendo: ${OPTARG}$CReset"
+    "${HERE}/keshiki-add" "${OPTARG}"
+    echo -e "${BCyan}Listo.$CReset\n"
+}
+
+[ -z "$1" ] || [[ $1 == - ]] && echo -e "${Lan[9]}\n${Lan[10]}"
+
+while getopts ":hvrlfs:a:" arg; do 
+    case "$arg" in
+        h) print_help; exit 0 ;;
+        v) echo -e "\n\e[5;01m$BCyan $script$CReset Version 1.4\n"; exit 0 ;;
+        r) restore ;;
+        f) finish ;;
+        l) list_wallpaper ;;
+        s) start "${OPTARG}" ;;
+        a) add "${OPTARG}" ;;
+        \?) echo "Error: Opción desconocida -$OPTARG"; print_help; exit 1 ;;
+        :) echo "La opción '-$OPTARG' requiere un argumento." ; exit 1 ;;
+        *) print_help; exit 1 ;; 
+    esac 
+done

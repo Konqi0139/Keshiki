@@ -1,0 +1,133 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+export num="$RANDOM" 
+txt="/tmp/keshiki_archives_${num}.txt" 
+file="${1}"
+
+[ ! -d "${DIRCONFIG}desktops/" ] && mkdir -p "${DIRCONFIG}desktops/"
+
+variables(){ 
+    if [[ "$file" =~ youtube\.com/watch\?v= || "$file" =~ youtu\.be/ || "$file" =~ youtube\.com/shorts/ ]]; then
+        export is_url="TRUE"
+        export format="[YouTube]"
+        
+        if command -v yt-dlp >/dev/null 2>&1; then
+            metadata=$(yt-dlp --get-title --get-duration "${file}" 2>/dev/null)
+            file_name=$(echo "$metadata" | sed -n '1p')
+            duration_raw=$(echo "$metadata" | sed -n '2p')
+            
+            [ -z "$file_name" ] && file_name="YouTube Video ${num}"
+            [ -z "$duration_raw" ] && duration_raw="00:00"
+            
+            duration="Streaming ($duration_raw)"
+            resolution_fps="Auto (yt-dlp)"
+        else
+            file_name="YouTube Video ${num}"
+            duration="Streaming"
+            resolution_fps="Auto"
+        fi
+    else
+        export is_url="FALSE"
+        local ext="${file##*.}"
+        ext="${ext,,}"
+        
+        if [[ "$ext" =~ ^(mp4|gif|mkv|webm|mov|avi)$ ]]; then
+            export format=".$ext"
+        else
+            export format=""
+        fi
+
+        if [ -n "$format" ] && command -v ffprobe >/dev/null 2>&1; then
+            IFS='|' read -r width height fps_raw raw_dur <<< "$(ffprobe -v error -select_streams v:0 -show_entries format=duration:stream=width,height,r_frame_rate -of csv=p=0:s='|' "${file}"|tr "\n" "|")"
+
+            if [ -n "$raw_dur" ]; then
+                raw_dur=${raw_dur%.*}
+                duration=$(date -u -d @"${raw_dur}" +%T 2>/dev/null || echo "${raw_dur}s")
+            else
+                duration="Unknown"
+            fi
+            
+            if [ -n "$fps_raw" ] && [[ "$fps_raw" == *"/"* ]]; then
+                local fps=$(( ${fps_raw%/*} / ${fps_raw#*/} ))
+                resolution_fps="${width}x${height} @ ${fps}fps"
+            else
+                resolution_fps="${width}x${height} @ ${fps_raw}fps"
+            fi
+        else
+            duration="Unknown"
+            resolution_fps="Unknown"
+        fi
+    fi
+}
+
+desktop(){ 
+    if [ "$is_url" = "TRUE" ]; then
+        NAME=$(sed "s/[=,.]//g;s/ /_/g;s/[^A-Za-z0-9_]//g" <<<"${file_name}")
+        DIR="${DIRCONFIG}resources/${NAME}"
+        mkdir -p "${DIR}"
+
+        if command -v yt-dlp >/dev/null 2>&1; then
+            yt-dlp --write-thumbnail --skip-download --convert-thumbnails jpg -o "/tmp/yt_frame${num}" "${file}" >/dev/null 2>&1
+            local downloaded_thumb
+            downloaded_thumb=$(find /tmp/ -maxdepth 1 -name "yt_frame${num}.*" | head -n 1)
+            [ -f "$downloaded_thumb" ] && mv "$downloaded_thumb" "/tmp/frame${num}.jpg"
+        fi
+
+        [ ! -f "/tmp/frame${num}.jpg" ] && cp "${ICON}" "/tmp/frame${num}.jpg" 2>/dev/null
+    else
+        full_name="${file##*/}" 
+        file_name="${full_name%$format}"
+        NAME=$(sed "s/[=,.]//g;s/ /_/g" <<<"${file_name}")
+        DIR="${DIRCONFIG}resources/${NAME}"
+        mkdir -p "${DIR}"
+        
+        if command -v ffmpegthumbnailer >/dev/null 2>&1; then
+            ffmpegthumbnailer -i "${file}" -s 140 -o "/tmp/frame${num}.jpg" 2>/dev/null
+        else
+            ffmpeg -y -i "${file}" -ss 00:00:01 -vframes 1 "/tmp/frame${num}.jpg" 2>/dev/null
+        fi
+    fi
+    
+        if command -v convert >/dev/null; then 
+            convert "/tmp/frame${num}.jpg" -resize 139x79 "${DIR}/image.jpg" 2>/dev/null
+        else 
+            ffmpeg -y -i "/tmp/frame${num}.jpg" -vf "scale=139:78" "${DIR}/image.jpg" 2>/dev/null
+        fi
+
+    local comment_text
+    if [ "$is_url" = "TRUE" ]; then 
+        comment_text="YouTube Stream | ${duration}"
+    else 
+        comment_text="${full_name} | ${duration} | ${resolution_fps}"
+    fi
+
+    cat <<EOF > "${DIRCONFIG}desktops/${NAME}.desktop"
+[Desktop Entry]
+Name=${file_name}
+GenericName=
+ShortName=xddd
+Comment=${comment_text}
+Exec=${HERE}/keshiki-start '${file}'
+Icon=${DIR}/image.jpg
+Type=Application
+EOF
+    
+    rm -f "/tmp/frame${num}.jpg" "/tmp/yt_frame${num}"*
+}
+
+if [ -d "$file" ] && [ "$is_url" != "TRUE" ]; then 
+    cd "$file" || exit
+    find "$(pwd)" -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.gif" -o -name "*.mkv" -o -name "*.webm" -o -name "*.mov" -o -name "*.avi" \) > "$txt" 2>/dev/null
+    
+    if [ -s "$txt" ]; then
+        xargs -P 3 -n 1 -I {} "${HERE}/keshiki-add" {} < "$txt"
+    fi
+    rm -f "$txt"
+else
+    variables
+    desktop
+fi

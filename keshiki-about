@@ -1,0 +1,33 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+if [[ $LANG = es* ]]; then 
+    Lan=("Arte de Icono por" "Créditos" "Cerrar" "Creado por" "Acerca de Keshiki")
+else 
+    Lan=("Icon Art by" "Credits" "Close" "Created by" "About Keshiki")
+fi
+
+export tab1="${Lan[0]}" title="${Lan[1]}" tab2="${Lan[3]}" id="$RANDOM" close="${Lan[2]}" ver="1.1.3"
+
+credits(){ 
+    keshiki --plug=$id --tabnum=1 --text-align=center --selectable-labels --text="\nS.Konqi0139" &
+    TAB1_PID=$!
+    keshiki --plug=$id --tabnum=2 --text-align=center --selectable-labels --text="\nMonstercat Guy Ü" &
+    TAB2_PID=$!
+
+    Exit(){ kill -USR1 $YAD_PID; }; export -f Exit
+
+    keshiki --notebook --window-icon="$ICON" --center --key=$id --tab="$tab2:" --tab="$tab1:" --width=339 --height=239 \
+    --title="$title" --button="$close:bash -c 'kill $TAB1_PID $TAB2_PID; Exit'"
+} 
+export -f credits
+
+keshiki --form --window-icon="$ICON" --image-on-top --image="${HERE}/about-keshiki.png" --title="${Lan[4]}" \
+--align=center --borders=5 --selectable-labels --field="<span></span>":LBL --center \
+--field="<span $Color><b><big>Keshiki</big></b></span>":LBL --field="$ver":LBL \
+--field="Keshiki es un gestor de fondos de pantalla animados.":LBL \
+--field="Licencia GNU GPLv3":LBL \
+--button="$title:bash -c credits" --button="$close":1 --buttons-layout=edge

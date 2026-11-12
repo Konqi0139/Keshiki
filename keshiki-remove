@@ -1,0 +1,48 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+BRed='\e[1;31m' BYellow='\e[1;33m' CReset="\e[m"
+final_list="/tmp/keshiki_final.lis" remove_list="/tmp/keshiki_remove.lis"
+
+if [[ $LANG = es* ]]; then Lan=("Todo"); else Lan=("ALL"); fi
+cd "${DIRCONFIG}" || exit
+
+rm -f "$final_list" "$remove_list" 2>/dev/null
+
+echo "FALSE 0 gtk-select-all ${Lan[0]}" > "$final_list"
+
+idx=1
+for desk in desktops/*.desktop; do
+    [ -e "$desk" ] || continue
+    item_name="${desk##*/}"
+    item_icon=$(grep "^Icon=" "$desk" | cut -d'=' -f2)
+    echo "FALSE ${idx} ${item_icon} ${item_name%.desktop}" >> "$final_list"
+    idx=$((idx+1))
+done
+
+trap "rm -f $final_list $remove_list; echo 'Limpiando...'; echo Adios..." INT EXIT
+
+yad --window-icon="$ICON" --center --list --checklist --width=839 --height=498 --text-align=center \
+--text="Seleccione los wallpapers que desea quitar" --title="Quitar Wallpapers" \
+--column="":CHK --column="#":NUM --column="Vista previa":IMG \
+--column="Nombre":TXT --search-column=4 \
+--button="<span $Color>Cancelar</span>!gtk-cancel:1" \
+--button="<span $Color>Quitar</span>!gtk-delete:0" $(cat "$final_list") | cut -f4 -d'|' > "$remove_list"
+
+[ ! -s "$remove_list" ] && exit 0
+
+while read -r opt; do
+    [ -z "$opt" ] && continue
+    echo -e "\n${BYellow}Quitando:${CReset}\n${BRed}${opt}${CReset}\n"
+    
+    if [ "$opt" = "${Lan[0]}" ]; then
+        rm -rf "${DIRCONFIG}resources" "${DIRCONFIG}desktops"
+        restart
+        break
+    else
+        rm -rf "${DIRCONFIG}resources/${opt}" "${DIRCONFIG}desktops/${opt}.desktop"
+    fi
+done < "$remove_list"

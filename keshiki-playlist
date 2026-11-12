@@ -1,0 +1,47 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+export HERE="$(dirname "$(readlink -f "${0}")")"
+export DIRCONFIG="$HOME/.config/keshiki/"
+export CONFIG="${DIRCONFIG}keshiki.cfg"
+[ -f "${CONFIG}" ] && source "${CONFIG}"
+
+list_tmp=$(mktemp /tmp/keshiki_pl.XXXXXX)
+playlist_file="${DIRCONFIG}playlist.txt"
+
+# Construcción limpia en memoria de los wallpapers indexados
+for desk in "${DIRCONFIG}desktops/"*.desktop; do 
+    [ -e "$desk" ] || continue
+    name="${desk##*/}"
+    name="${name%.desktop}"
+    icon=$(awk -F '=' '/^Icon=/{print $2}' "$desk")
+    
+    # Comprobar si ya estaba marcado en la playlist existente
+    if grep -qF "$name" "$playlist_file"; then
+        echo "TRUE ${icon} ${name}" >> "$list_tmp"
+    else
+        echo "FALSE ${icon} ${name}" >> "$list_tmp"
+    fi
+done
+
+if [ ! -s "$list_tmp" ]; then
+    yad --window-icon="$ICON" --center --error --text="No tenés wallpapers agregados para crear una lista."
+    rm -f "$list_tmp"
+    exit 1
+fi
+
+select=$(keshiki --window-icon="$ICON" --center --list --checklist --width=839 --height=498 \
+--text-align=center --title="Keshiki Playlist Manager" \
+--button="Cancelar!gtk-cancel":1 --button="Aceptar!gtk-ok":0 \
+--column="":CHK --column="Vista previa":IMG --column="Nombre":TXT \
+--search-column=3 --separator="|" < "$list_tmp")
+
+if [ $? -eq 0 ]; then
+    # Filtrar solo los nombres seleccionados y guardarlos
+    echo "$select" | awk -F '|' '{for(i=3;i<=NF;i+=3) print $i}' > "$playlist_file"
+fi
+
+rm -f "$list_tmp"

@@ -1,0 +1,67 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+export rand_id="$RANDOM" list="/tmp/keshiki_files_${rand_id}.txt"
+
+if [[ $LANG == es* ]]; then 
+    Lan=(
+        "Añadir Contenido a Keshiki" 
+        "Cancelar" 
+        "Aceptar"
+        "Seleccionar"
+        "Seleccionar archivos o carpetas locales:" 
+        "O pegar un enlace de YouTube / Stream:"
+        "Buscar..."
+    )
+else 
+    Lan=(
+        "Add Content to Keshiki" 
+        "Cancel" 
+        "Accept" 
+        "Select"
+        "Select local files or folders:" 
+        "Or paste a YouTube / Stream link:"
+        "Browse..."
+    )
+fi
+
+cd "$HOME" || exit
+export title="${Lan[4]%:}" bt1="${Lan[1]}" bt2="${Lan[3]}"
+
+Select_files(){ Exit
+    keshiki --window-icon="$ICON" --add-preview --file --multiple --separator="\n" \
+    --title="$title" --center --width=931 --height=639 \
+    --button="<span $Color>$bt1</span>!gtk-cancel:1" \
+    --button="<span $Color>$bt2</span>!document-open:0" \
+    --file-filter="Video | *.mp4 *.mkv *.webm *.mov *.avi" --file-filter="Imagen | *.gif" > "$list"
+}
+export -f Select_files
+Exit(){ 
+    kill -USR1 "$YAD_PID"
+}
+export -f Exit
+trap "rm -f $list" EXIT INT TERM
+
+res=$(keshiki --window-icon="$ICON" --center --width=550 --height=139 --form \
+--title="${Lan[0]}" --borders=11 --align=left \
+--field="${Lan[4]}":FBTN "bash -c Select_files" \
+--field="${Lan[5]}":TXT "" \
+--button="<span $Color>${Lan[1]}</span>!gtk-cancel:1" \
+--button="<span $Color>${Lan[2]}</span>!gtk-ok:0")
+
+url_input=$(cut -d'|' -f2 <<<"$res")
+echo $res
+if [ -s "$list" ]; then
+    echo "Procesando archivos locales..."
+    xargs -P 3 -n 1 -I {} "${HERE}/keshiki-add" {} < "$list"
+fi
+
+if [ -n "$url_input" ] && [[ "$url_input" =~ ^https:// ]]; then
+    echo "Procesando enlace web..."
+    "${HERE}/keshiki-add" "$url_input"
+fi
+
+exit 0

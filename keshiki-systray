@@ -1,0 +1,58 @@
+#!/bin/bash
+# Realizado por: S.Konqi0139
+#
+# Eres libre de modificarlo a tu gusto, solo te pido
+# nombrarme como autor del script
+
+export HERE="$(dirname "$(readlink -f "${0}")")" DIRCONFIG="$HOME/.config/keshiki/" running=${0##*/} PATH="${HERE}/bin:${PATH}" 
+export CONFIG="${DIRCONFIG}keshiki.cfg" ICON="${HERE}/keshiki.png"
+
+pidof yadsystray >/dev/null && exit 0
+
+if [[ $LANG == es* ]]; then 
+    Lan=(
+        "Acerca de" 
+        "Cerrar Keshiki" 
+        "Salir" 
+        "Finalizar el Wallpaper" 
+        "Iniciar último seleccionado" 
+        "Pausar/Reproducir"
+    )
+else 
+    Lan=(
+        "About" 
+        "Close Keshiki" 
+        "Exit" 
+        "Wallpaper Finish" 
+        "Start last selected" 
+        "Play/Pause"
+    )
+fi
+
+Exit(){ 
+    killall -q yadsystray
+    exit 0
+}
+export -f Exit
+
+toggle_keshiki(){ 
+    if pidof keshiki >/dev/null; then 
+        killall -q keshiki
+    else 
+        "${HERE}/keshiki.bash" &
+    fi
+}
+export -f toggle_keshiki
+
+play_pause(){ 
+    echo '{ "command": ["cycle", "pause"] }' | socat - "/tmp/mpv_socket_${USER}" >/dev/null 2>&1
+}
+export -f play_pause
+
+yadsystray --notification --image="$ICON" --text="Keshiki" --command="bash -c toggle_keshiki" \
+--menu="${Lan[0]}!${HERE}/keshiki-about!gtk-info|\
+${Lan[1]}!bash -c 'killall -q keshiki; Exit'!gtk-close|\
+${Lan[3]}!${HERE}/keshiki-cli -f|\
+${Lan[4]}!${HERE}/keshiki-cli -r|\
+${Lan[5]}!bash -c play_pause|\
+${Lan[2]}!bash -c '${HERE}/keshiki-cli -f; killall -q keshiki; Exit'!exit"
