@@ -41,7 +41,7 @@ Keshiki incluye un script que verificará automáticamente que tengas todas las 
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com
+git clone https://github.com/Konqi0139/Keshiki
 cd Keshiki
 
 # 2. Otorgar permisos y ejecutar el instalador
