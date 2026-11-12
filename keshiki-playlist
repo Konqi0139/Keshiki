@@ -28,7 +28,7 @@ for desk in "${DIRCONFIG}desktops/"*.desktop; do
 done
 
 if [ ! -s "$list_tmp" ]; then
-    yad --window-icon="$ICON" --center --error --text="No tenés wallpapers agregados para crear una lista."
+    keshiki --window-icon="$ICON" --center --error --text="No tenés wallpapers agregados para crear una lista."
     rm -f "$list_tmp"
     exit 1
 fi
