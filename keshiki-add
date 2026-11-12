@@ -4,9 +4,17 @@
 # Eres libre de modificarlo a tu gusto, solo te pido
 # nombrarme como autor del script
 
-export num="$RANDOM" PATH="${HOME}/.local/bin:${PATH}"
-txt="/tmp/keshiki_archives_${num}.txt" 
-file="${1}"
+export num="$RANDOM" PATH="${HOME}/.local/bin:${HOME}/.deno/bin:${PATH}"
+txt="/tmp/keshiki_archives_${num}.txt" file="${1}"
+
+JS_ARG=""
+if command -v deno >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes deno"
+elif command -v node >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes node"
+elif command -v qjs >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes quickjs"
+fi
 
 [ ! -d "${DIRCONFIG}desktops/" ] && mkdir -p "${DIRCONFIG}desktops/"
 
@@ -16,9 +24,9 @@ variables(){
         export format="[YouTube]"
         
         if command -v yt-dlp >/dev/null 2>&1; then
-            metadata=$(yt-dlp --get-title --get-duration "${file}" 2>/dev/null)
-            file_name=$(echo "$metadata" | sed -n '1p')
-            duration_raw=$(echo "$metadata" | sed -n '2p')
+            metadata=$(yt-dlp $JS_ARG --no-warnings --no-playlist --get-title --get-duration "${file}")
+            file_name=$(echo "$metadata" | head -1)
+            duration_raw=$(echo "$metadata" | tail -1)
             
             [ -z "$file_name" ] && file_name="YouTube Video ${num}"
             [ -z "$duration_raw" ] && duration_raw="00:00"
@@ -71,9 +79,9 @@ desktop(){
         mkdir -p "${DIR}"
 
         if command -v yt-dlp >/dev/null 2>&1; then
-            yt-dlp --write-thumbnail --skip-download --convert-thumbnails jpg -o "/tmp/yt_frame${num}" "${file}" >/dev/null 2>&1
+            yt-dlp $JS_ARG --no-warnings --no-playlist --write-thumbnail --skip-download --convert-thumbnails jpg -o "/tmp/yt_frame${num}" "${file}"
             local downloaded_thumb
-            downloaded_thumb=$(find /tmp/ -maxdepth 1 -name "yt_frame${num}.*" | head -n 1)
+            downloaded_thumb=$(find /tmp/ -maxdepth 1 -name "yt_frame${num}.*" | head -1)
             [ -f "$downloaded_thumb" ] && mv "$downloaded_thumb" "/tmp/frame${num}.jpg"
         fi
 
@@ -109,7 +117,6 @@ desktop(){
 [Desktop Entry]
 Name=${file_name}
 GenericName=
-ShortName=xddd
 Comment=${comment_text}
 Exec=${HERE}/keshiki-start '${file}'
 Icon=${DIR}/image.jpg
