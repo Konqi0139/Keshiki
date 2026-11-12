@@ -1,6 +1,6 @@
 <p align="center"><img src="keshiki.png" width="339"></p>
 
-<p align="center">**un gestor de fondos de pantalla animados liviano para Linux escrito en Bash.** </p>
+<p align="center">un gestor de fondos de pantalla animados liviano para Linux escrito en Bash.</p>
 
 # Keshiki ー景色ー
 
