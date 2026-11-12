@@ -7,7 +7,7 @@
 HERE="$(dirname "$(readlink -f "${0}")")" 
 export running=${0##*/} BCyan='\e[1;36m' CReset="\e[m" DIRCONFIG="$HOME/.config/keshiki/"
 
-export PATH="${HERE}/bin:${PATH}" socketfile="/tmp/mpv_socket_${USER}" last_wall="${DIRCONFIG}last_wallpaper.txt"
+export PATH="${HERE}/bin:${HOME}/.local/bin:${PATH}" socketfile="/tmp/mpv_socket_${USER}" last_wall="${DIRCONFIG}last_wallpaper.txt"
 
 [ -f "${DIRCONFIG}keshiki.cfg" ] && source "${DIRCONFIG}keshiki.cfg"
 
