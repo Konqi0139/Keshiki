@@ -4,7 +4,7 @@
 # Eres libre de modificarlo a tu gusto, solo te pido
 # nombrarme como autor del script
 
-export num="$RANDOM" 
+export num="$RANDOM" PATH="${HOME}/.local/bin:${PATH}"
 txt="/tmp/keshiki_archives_${num}.txt" 
 file="${1}"
 
