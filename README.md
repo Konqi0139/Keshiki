@@ -77,11 +77,11 @@ sudo ./install.sh --remove
 
 | Interfaz Principal | Selección de Wallpapers |
 | :---: | :---: |
-| ![Keshiki GUI](screenshots/preview.png) | ![Selector de archivos](screenshots/file_selector.png) |
+| ![Keshiki GUI](screenshots/preview.png) | ![Selector de archivos](screenshots/file-selector.png) |
 
 | Bandeja del Sistema (Systray) | Opciones y Configuración |
 | :---: | :---: |
-| ![Keshiki Systray](screenshots/systray.png) | ![Configuración de Opacidad](screenshots/options.png) |
+| ![Keshiki Systray](screenshots/system-tray.png) | ![Configuración de Opacidad](screenshots/dialog-options.png) |
 
 ---
 
