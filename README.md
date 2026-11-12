@@ -7,6 +7,7 @@
 Si te gusta mi proyecto, ¡por favor no olvides hacer clic en el botón de estrella! 🌟 ¡Tu apoyo es muy valioso!
 
 [![GitHub estrellas](https://img.shields.io/github/stars/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki/stargazers)
+[![GitHub observadores](https://img.shields.io/github/watchers/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki/watchers)
 [![GitHub licencia](https://img.shields.io/github/license/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki)
 [![GitHub último commit](https://img.shields.io/github/last-commit/Konqi0139/Keshiki?style=flat-square)](https://github.com/Konqi0139/Keshiki/commits)
 
