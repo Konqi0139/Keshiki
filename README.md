@@ -46,7 +46,7 @@ cd Keshiki
 
 # 2. Otorgar permisos y ejecutar el instalador
 chmod +x install.sh
-./install.sh
+sudo ./install.sh
 ```
 
 ### Tabla de Dependencias Verificadas
@@ -63,12 +63,21 @@ chmod +x install.sh
 | `imagemagick` | Tratamiento y redimensión de miniaturas | Requerido |
 
 ---
+### Desinstalación 🗑️
+
+Si deseas desinstalar Keshiki por completo de tu sistema, simplemente ejecuta el mismo instalador con el parámetro `--remove`:
+
+```bash
+sudo ./install.sh --remove
+```
+
+> **Nota:** Esto eliminará los archivos del programa en `/opt/keshiki`, el acceso directo del menú y el lanzador global. Si también quieres borrar tus configuraciones y miniaturas guardadas, elimina la carpeta `~/.config/keshiki`.
 
 ## Screenshots 📸
 
 | Interfaz Principal | Selección de Wallpapers |
 | :---: | :---: |
-| ![Keshiki GUI](screenshots/main_gui.png) | ![Selector de archivos](screenshots/file_selector.png) |
+| ![Keshiki GUI](screenshots/preview.png) | ![Selector de archivos](screenshots/file_selector.png) |
 
 | Bandeja del Sistema (Systray) | Opciones y Configuración |
 | :---: | :---: |
