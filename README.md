@@ -54,7 +54,7 @@ sudo ./install.sh
 | Herramienta | Función en Keshiki | Estado en el instalador |
 | :--- | :--- | :---: |
 | `bash` | Intérprete principal del script | Requerido |
-| `yad` / `yadsystray` | Ventanas de interfaz y menú en barra de tareas | Requerido |
+| `yad` | Ventanas de interfaz y menú en barra de tareas | Requerido |
 | `mpv` | Renderizado multimedia fluido | Requerido |
 | `xwinwrap` | Dibujado de video en la Root Window (X11) | Requerido |
 | `socat` | Sockets de comunicación IPC con mpv | Requerido |
