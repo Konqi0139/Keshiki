@@ -5,18 +5,26 @@
 # nombrarme como autor del script
 
 HERE="$(dirname "$(readlink -f "${0}")")" 
-export running=${0##*/} BCyan='\e[1;36m' CReset="\e[m" DIRCONFIG="$HOME/.config/keshiki/"
+export running=${0##*/} BCyan='\e[1;36m' CReset="\e[m" DIRCONFIG="$HOME/.config/keshiki/" socketfile="/tmp/mpv_socket_${USER}"
 
-export PATH="${HERE}/bin:${HOME}/.local/bin:${PATH}" socketfile="/tmp/mpv_socket_${USER}" last_wall="${DIRCONFIG}last_wallpaper.txt"
+export PATH="${HERE}/bin:${HOME}/.local/bin:${HOME}/.deno/bin:${PATH}" last_wall="${DIRCONFIG}last_wallpaper.txt"
+JS_ARG=""
+
+if command -v deno >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes deno"
+elif command -v node >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes node"
+elif command -v qjs >/dev/null 2>&1; then
+    JS_ARG="--js-runtimes quickjs"
+fi
 
 [ -f "${DIRCONFIG}keshiki.cfg" ] && source "${DIRCONFIG}keshiki.cfg"
-
-[ -f "$last_wall" ] && grep -qF "${1}" "$last_wall" || echo "${1}" > "$last_wall"
 
 if [ -z "$1" ]; then 
     [ -f "$last_wall" ] && wallpaper=$(cat "$last_wall") || exit 0
 else 
     wallpaper="${1}"
+    [ -f "$last_wall" ] && grep -qF "${1}" "$last_wall" || echo "${1}" > "$last_wall"
 fi
 
 if [[ ! "$wallpaper" =~ ^https:// ]]; then
@@ -35,7 +43,13 @@ launch_wallpaper(){
     mpv_args="-wid WID --loop ${audio[1]} --volume=${audio[2]} --no-osc --input-ipc-server=$socketfile --no-osd-bar --no-border --no-resume-playback --input-vo-keyboard=no $wallpaper"
 
     if [[ "$wallpaper" =~ ^https:// ]]; then
-        xwinwrap $xwi_args --  mpv.bash $mpv_args \
+    YTDL_OPTS=""
+    if [ -n "$JS_ARG" ]; then
+        # Extraer solo el nombre del runtime (ej: "deno", "node" o "quickjs")
+        RUNTIME_NAME="${JS_ARG#--js-runtimes }"
+        YTDL_OPTS="--ytdl-raw-options=js-runtimes=${RUNTIME_NAME}"
+    fi
+        xwinwrap $xwi_args --  mpv.bash $mpv_args $YTDL_OPTS \
         --ytdl-format="bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
     else
         xwinwrap $xwi_args -- mpv.bash $mpv_args
